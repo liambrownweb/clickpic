@@ -1,0 +1,20 @@
+for dir in	/usr/X11/bin \
+		/usr/bin/X11 \
+		/usr/X11R6/bin \
+		/var/lib/dosemu \
+		/usr/games \
+		/opt/bin \
+		/opt/kde3/bin \
+		/opt/kde2/bin \
+		/opt/kde/bin \
+		/usr/openwin/bin \
+		/opt/cross/bin \
+        /usr/share/android-dev/sdk/tools\
+        /usr/share/android-dev/eclipse\
+        /usr/local/zend/bin
+    do
+	test -d $dir && PATH=$PATH:$dir
+    done
+    unset dir
+    export PATH
+export NODE_PATH=/usr/lib64/node_modules:/usr/lib/node_modules
