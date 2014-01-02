@@ -1,12 +1,18 @@
 var express = require('express'),
     app = express(),
     config = require('./config.js'),
+    language_control = require('./language/control'),
     http = require('http'),
     httpServer = http.createServer(app),
     path = require('path'),
     routes = require('./routes'),
+    data = require('./routes/data'),
+    images = require('./routes/images'),
     user = require('./routes/user'),
-    images = require('./routes/images');
+    viewer =  require('./routes/viewer'),
+    admin = require('./routes/admin');
+
+language_control.setLanguage(config.locale.language);
 
 var main = function () {
     // all environments
@@ -39,6 +45,10 @@ var main = function () {
     app.get('/users', user.list);
     app.get('/images/get', images.main);
     app.get('/images/manage', images.manage);
+    app.get('/data/get', data.main);
+    app.get('/data/manage', data.manage);
+    app.get('/viewer', viewer.main);
+    app.get('/admin', admin.main);
 }
 
 main();
