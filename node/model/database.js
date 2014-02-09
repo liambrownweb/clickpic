@@ -19,6 +19,7 @@ var mongo = require('mongojs'),
                 host_name = host_data;
             }
             my.db = mongo.connect(host_name, my.connections);
+            console.log("Connected to DB");
         },
         del: function (collection, filters, callback) {
             my.validateData(collection, filters, callback);
