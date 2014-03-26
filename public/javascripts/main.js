@@ -17,19 +17,24 @@
 (function () {
     "use strict";
 
-    var viewman, viewManager, TargetObject = function (data) {
-        this.link = data.link;
-        this.top = data.top;
-        this.bottom = data.bottom;
-        this.left = data.left;
-        this.right = data.right;
-    };
-
-    //Determines whether the point specified by (x, y) is within the limits of the object.
-    TargetObject.prototype.hasPoint = function (x, y) {
-        if (typeof x === 'number' && typeof y === 'number') {
-            return (y >= this.top && y <= this.bottom && x <= this.right && x >= this.left);
-        }
+    var viewman, 
+        viewManager, 
+        targetObject;
+    targetObject = function (data) {
+        var new_target = {
+            link : data.link,
+            top : data.top,
+            bottom : data.bottom,
+            left : data.left,
+            right : data.right,
+            hasPoint : function (x, y) {
+                if (typeof x === 'number' && typeof y === 'number') {
+                    return (y >= this.top && y <= this.bottom 
+                        && x <= this.right && x >= this.left);
+                }
+            }
+        };
+        return new_target;
     };
 
     viewManager = function (data) {
@@ -119,7 +124,7 @@
             this.targets = [];
         }
         for (i = 0; i < data.length; i += 1) {
-            this.targets[i] = new TargetObject(data[i]);
+            this.targets[i] = targetObject(data[i]);
         }
     };
 

@@ -1,12 +1,61 @@
 (function () {
     'use strict';
-    var editControls, drawCanvas, setDrawPanel;
-    editControls = function (canvasctrl) {
+    var adminView, editControls, drawCanvas, setDrawPanel, tourModel;
+    adminView = function () {
+        var my = {
+                rooms: {}
+            },
+            self = {
+                room_list: $("#edit_screen_list")
+            };
+        self.update = function (rooms) {
+            $.each(rooms, function (id, room) {
+                self.makeRoom(id, room);
+            });
+        };
+        self.makeRoom = function (id, room_data) {
+            console.log(room_data);
+            var new_room;
+            if (my.rooms.hasOwnProperty(id)){
+                return;
+            }
+            new_room = $("<h3>" + room_data.name + "</h3>");
+            self.room_list.append(new_room);
+            $.each(room_data.pictures, function(index, picture){
+                self.makePicture(new_room, picture);
+            });
+            my.rooms[id] = new_room;
+            $("#edit_screen_list").accordion("refresh");
+        };
+        self.makePicture = function (room, picture_data) {
+            var new_picture_div,
+                new_picture,
+                new_picture_title;
+            new_picture_div = $("<div></div>");
+            new_picture_div.addClass("screen_item");
+            new_picture_div.attr("id", picture_data.id);
+            new_picture = $("<img>").addClass("screen_item_thumb");
+            new_picture.attr("src", picture_data.src);
+            new_picture_title = $("<p>" + picture_data.name + "</p>");
+            new_picture_div.append(new_picture);
+            new_picture_div.append(new_picture_title);
+            room.after(new_picture_div);
+        }
+        return self;
+    }
+    editControls = function (view, canvasctrl, tour_model) {
         if (canvasctrl === undefined) {
             canvasctrl = drawCanvas();
         }
+        if (tour_model === undefined) {
+            tour_model = tourModel();
+        }
         var modes = canvasctrl.getModes(),
             self = {};
+        self.addRoom = function (e) {
+            tour_model.addRoom();
+            view.update(tour_model.getRooms());
+        }
         self.setMode = function (mode) {
             canvasctrl.setMode(modes[mode]);
         };
@@ -332,18 +381,65 @@
         }
         $("#app_tabs").tabs();
         $("#edit_screen_list").accordion({heightStyle: "auto"});
-        $("#add_room").button();
-        $("#add_picture").button();
+        $("#add_room").button().click(function (e) {
+            edit_ctrl.addRoom();
+        });
+        $("#add_picture").button().click(function (e) {
+            edit_ctrl.addPicture
+        });
         $("#edit_tools").accordion({heightStyle: "fill"});
         $("#edit_mode").buttonset();
         $("#edit_mode").children("input").click(function (e) {
             edit_ctrl.setMode(e.currentTarget.value);
         });
     };
+    tourModel = function () {
+        var new_model = {},
+            my = {
+                generateRoomID: function () {
+                    var room_id = "room_" + my.id();
+                    return room_id;
+                },
+                generatePictureID: function () {
+                    var picture_id = "picture_" + my.id();
+                    return picture_id;
+                },
+                id_no: 0,
+                id: function () {
+                    my.id_no += 1;
+                    return my.id_no;
+                },
+                rooms: {},
+            };
+        new_model.addRoom = function () {
+            var room_id = my.generateRoomID();
+            my.rooms[room_id] = {
+                name: "New Room",
+                pictures: {}
+            };
+            new_model.addPicture(room_id);
+        };
+        new_model.addPicture = function (room) {
+            var picture_id = my.generatePictureID();
+            my.rooms[room].pictures[picture_id] = {
+                name: "New Picture",
+                src: ""
+            };
+        };
+        new_model.getRooms = function () {
+            return my.rooms;
+        };
+        new_model.getRoom = function (room) {
+            return my.rooms[room];
+        };
+        return new_model;
+    }
 
     $(document).ready(function () {
         var canvas_ctrl = drawCanvas(),
-            edit_ctrl = editControls(canvas_ctrl);
+            model = tourModel(),
+            view = adminView(),
+            edit_ctrl = editControls(view, canvas_ctrl, model);
         setDrawPanel(edit_ctrl);
     });
 }());

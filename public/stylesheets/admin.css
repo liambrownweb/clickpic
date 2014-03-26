@@ -12,6 +12,7 @@ body {
 #app_tabs {
   box-shadow: #000 1px 1px 5px;
   margin: 5px;
+  min-height: 600px;
 }
 .panel_frame {
   border: 1px solid #999;
