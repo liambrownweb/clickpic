@@ -1,6 +1,6 @@
 /*
  * sample_data_set = {
- *  file: "images/house1/1.jpg",
+ *  src: "images/house1/1.jpg",
  *  shapes: {
  *      up: {
  *          link:
@@ -41,7 +41,7 @@
         var that = this;
         this.displayDiv = $("#main_view");
         this.setUIData(data.shapes);
-        this.setDisplayImage(data.file);
+        this.setDisplayImage(data.src);
 
         this.displayDiv.click(function (e) {
             var offsets, xPercent, yPercent;
@@ -112,7 +112,7 @@
         $.getJSON(url, function (data) {
             if (that.isValid(data)) {
                 that.setUIData(data.shapes);
-                that.setDisplayImage(data.file);
+                that.setDisplayImage(data.src);
             }
         });
     };
@@ -134,7 +134,7 @@
     };
 
     viewman = new viewManager({
-        file: "data/images/house1/0.jpg",
+        src: "data/images/house1/0.jpg",
         shapes: [
             {
                 'link': 'house1_1',

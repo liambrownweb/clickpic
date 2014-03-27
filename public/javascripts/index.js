@@ -3,18 +3,17 @@
     var adminView, editControls, drawCanvas, setDrawPanel, tourModel;
     adminView = function () {
         var my = {
-            rooms: {}
-        },
-        self = {
-            room_list: $("#edit_screen_list")
-        };
+                rooms: {}
+            },
+            self = {
+                room_list: $("#edit_screen_list")
+            };
         self.update = function (rooms) {
             $.each(rooms, function (id, room) {
                 self.makeRoom(id, room);
             });
         };
         self.makeRoom = function (id, room_data) {
-            console.log(room_data);
             var new_room,
                 new_pictures_div;
             if (!my.rooms.hasOwnProperty(id)) {
@@ -49,10 +48,18 @@
             new_picture_div.append(new_picture);
             new_picture_div.append(new_picture_title);
             picture_div.append(new_picture_div);
+            new_picture_div.click(function () {
+                var target = this;
+                my.canvas_ctrl.setActivePicture(target);
+            });
+        };
+        self.setController = function (canvas_ctrl){
+            my.canvas_ctrl = canvas_ctrl;
         }
         return self;
-    }
+    };
     editControls = function (view, canvasctrl, tour_model) {
+        view.setController(this);
         if (canvasctrl === undefined) {
             canvasctrl = drawCanvas();
         }
@@ -61,18 +68,21 @@
         }
         var modes = canvasctrl.getModes(),
             self = {};
-        self.addRoom = function (e) {
+        self.addRoom = function () {
             tour_model.addRoom();
             view.update(tour_model.getRooms());
         };
         self.addPicture = function () {
             tour_model.addPicture();
             view.update(tour_model.getRooms());
-        }
+        };
+        self.setActivePicture = function (picture) {
+            
+        };
         self.setActiveRoom = function (room) {
             var object_id = room.attr("object_id");
             tour_model.setActiveRoom(object_id);
-        }
+        };
         self.setMode = function (mode) {
             canvasctrl.setMode(modes[mode]);
         };
@@ -86,7 +96,7 @@
                 RESIZING: 5,
                 MODIFYING: 2,
                 ERASING: 3,
-                TESTING: 4,
+                TESTING: 4
             },
             my = {
                 canvas: my_canvas,
@@ -103,7 +113,7 @@
                     my.draw2d.fillRect(shape.x1, shape.y1, shape.x2, shape.y2);
                 },
                 shapes: [],
-                edge_threshold: 8,
+                edge_threshold: 8
             },
             parts = {
                 TOP: 1,
@@ -113,7 +123,7 @@
                 BOTTOM: 5,
                 BOTTOMLEFT: 14,
                 LEFT: 9,
-                TOPLEFT: 10,
+                TOPLEFT: 10
             },
             pointers = {
                 ALL_SCROLL: 'all-scroll',
@@ -139,7 +149,7 @@
                 5: 's-resize',
                 14: 'sw-resize',
                 9: 'w-resize',
-                10: 'nw-resize',
+                10: 'nw-resize'
             },
             self = {},
             x,
@@ -201,7 +211,8 @@
             }
             if (my.mode === modes.MODIFYING) {
                 return;
-            } else if (my.mode === modes.DRAWING) {
+            }
+            if (my.mode === modes.DRAWING) {
                 new_shape = {
                     x1: my.last_mousedown.x,
                     y1: my.last_mousedown.y,
@@ -348,7 +359,7 @@
             for (i = my.shapes.length - 1; i >= 0; i -= 1) {
                 current_shape = my.shapes[i];
                 if (x >= current_shape.x1 && x <= current_shape.x1 + current_shape.x2
-                    && y >= current_shape.y1 && y <= current_shape.y1 + current_shape.y2) {
+                        && y >= current_shape.y1 && y <= current_shape.y1 + current_shape.y2) {
                     if (pop_it) {
                         my.shapes.splice(i, 1);
                     }
@@ -362,7 +373,7 @@
             my.draw2d.fillStyle = "rgba(0, 255, 0, 0.4)";
             my.draw2d.strokeRect(shape.x1, shape.y1, shape.x2, shape.y2);
             my.draw2d.fillRect(shape.x1, shape.y1, shape.x2, shape.y2);
-        }
+        };
         self.nearEdge = function (shape, x, y) {
             var x_ldiff, x_rdiff, y_tdiff, y_bdiff, part = 0;
             x_ldiff = Math.abs(x - shape.x1);
@@ -401,10 +412,10 @@
         $("#edit_screen_list").on("accordionactivate", function (event, ui) {
             edit_ctrl.setActiveRoom(ui.newHeader);
         });
-        $("#add_room").button().click(function (e) {
+        $("#add_room").button().click(function () {
             edit_ctrl.addRoom();
         });
-        $("#add_picture").button().click(function (e) {
+        $("#add_picture").button().click(function () {
             edit_ctrl.addPicture();
         });
         $("#edit_tools").accordion({heightStyle: "fill"});
@@ -430,7 +441,7 @@
                     my.id_no += 1;
                     return my.id_no;
                 },
-                rooms: {},
+                rooms: {}
             };
         new_model.addRoom = function () {
             var room_id = my.generateRoomID();
@@ -450,7 +461,9 @@
             var picture_id = my.generatePictureID();
             my.rooms[room_id].pictures[picture_id] = {
                 name: "New Picture",
+                description: "New view of the room",
                 src: "",
+                shapes: {},
                 id: picture_id
             };
         };
@@ -464,7 +477,7 @@
             my.active_room_id = active_room_id;
         };
         return new_model;
-    }
+    };
 
     $(document).ready(function () {
         var canvas_ctrl = drawCanvas(),
