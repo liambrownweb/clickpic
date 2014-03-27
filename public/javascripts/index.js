@@ -3,11 +3,11 @@
     var adminView, editControls, drawCanvas, setDrawPanel, tourModel;
     adminView = function () {
         var my = {
-                rooms: {}
-            },
-            self = {
-                room_list: $("#edit_screen_list")
-            };
+            rooms: {}
+        },
+        self = {
+            room_list: $("#edit_screen_list")
+        };
         self.update = function (rooms) {
             $.each(rooms, function (id, room) {
                 self.makeRoom(id, room);
@@ -15,31 +15,40 @@
         };
         self.makeRoom = function (id, room_data) {
             console.log(room_data);
-            var new_room;
-            if (my.rooms.hasOwnProperty(id)){
-                return;
+            var new_room,
+                new_pictures_div;
+            if (!my.rooms.hasOwnProperty(id)) {
+                new_room = $("<h3>" + room_data.name + "</h3>");
+                new_pictures_div = $("<div></div>");
+                new_pictures_div.addClass("screen_item");
+                self.room_list.append(new_room);
+                new_room.after(new_pictures_div);
+                my.rooms[id] = {room: new_room, pictures_div: new_pictures_div, pictures: []};
+            } else {
+                new_room = my.rooms[id].room;
+                new_pictures_div = my.rooms[id].pictures_div;
             }
-            new_room = $("<h3>" + room_data.name + "</h3>");
-            self.room_list.append(new_room);
-            $.each(room_data.pictures, function(index, picture){
-                self.makePicture(new_room, picture);
+            $.each(room_data.pictures, function (index, picture) {
+                if (my.rooms[id].pictures.indexOf(picture.id) < 0) {
+                    self.makePicture(new_pictures_div, picture);
+                    my.rooms[id].pictures.push(picture.id);
+                }
             });
-            my.rooms[id] = new_room;
+            new_room.attr('object_id', id);
             $("#edit_screen_list").accordion("refresh");
         };
-        self.makePicture = function (room, picture_data) {
+        self.makePicture = function (picture_div, picture_data) {
             var new_picture_div,
                 new_picture,
                 new_picture_title;
             new_picture_div = $("<div></div>");
-            new_picture_div.addClass("screen_item");
             new_picture_div.attr("id", picture_data.id);
             new_picture = $("<img>").addClass("screen_item_thumb");
             new_picture.attr("src", picture_data.src);
             new_picture_title = $("<p>" + picture_data.name + "</p>");
             new_picture_div.append(new_picture);
             new_picture_div.append(new_picture_title);
-            room.after(new_picture_div);
+            picture_div.append(new_picture_div);
         }
         return self;
     }
@@ -55,6 +64,14 @@
         self.addRoom = function (e) {
             tour_model.addRoom();
             view.update(tour_model.getRooms());
+        };
+        self.addPicture = function () {
+            tour_model.addPicture();
+            view.update(tour_model.getRooms());
+        }
+        self.setActiveRoom = function (room) {
+            var object_id = room.attr("object_id");
+            tour_model.setActiveRoom(object_id);
         }
         self.setMode = function (mode) {
             canvasctrl.setMode(modes[mode]);
@@ -380,12 +397,15 @@
             edit_ctrl = editControls();
         }
         $("#app_tabs").tabs();
-        $("#edit_screen_list").accordion({heightStyle: "auto"});
+        $("#edit_screen_list").accordion({heightStyle: "content"});
+        $("#edit_screen_list").on("accordionactivate", function (event, ui) {
+            edit_ctrl.setActiveRoom(ui.newHeader);
+        });
         $("#add_room").button().click(function (e) {
             edit_ctrl.addRoom();
         });
         $("#add_picture").button().click(function (e) {
-            edit_ctrl.addPicture
+            edit_ctrl.addPicture();
         });
         $("#edit_tools").accordion({heightStyle: "fill"});
         $("#edit_mode").buttonset();
@@ -396,6 +416,7 @@
     tourModel = function () {
         var new_model = {},
             my = {
+                active_room_id: null,
                 generateRoomID: function () {
                     var room_id = "room_" + my.id();
                     return room_id;
@@ -418,12 +439,19 @@
                 pictures: {}
             };
             new_model.addPicture(room_id);
+            if (my.rooms.length === 1) {
+                my.active_room_id = room_id;
+            }
         };
-        new_model.addPicture = function (room) {
+        new_model.addPicture = function (room_id) {
+            if (room_id === undefined) {
+                room_id = my.active_room_id;
+            }
             var picture_id = my.generatePictureID();
-            my.rooms[room].pictures[picture_id] = {
+            my.rooms[room_id].pictures[picture_id] = {
                 name: "New Picture",
-                src: ""
+                src: "",
+                id: picture_id
             };
         };
         new_model.getRooms = function () {
@@ -431,6 +459,9 @@
         };
         new_model.getRoom = function (room) {
             return my.rooms[room];
+        };
+        new_model.setActiveRoom = function (active_room_id) {
+            my.active_room_id = active_room_id;
         };
         return new_model;
     }
