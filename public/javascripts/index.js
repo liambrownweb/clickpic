@@ -53,12 +53,17 @@
                 my.canvas_ctrl.setActivePicture(target);
             });
         };
+        self.setActivePicture = function (picture_data) {
+            console.log("View controller received the following via setActivePicture:");
+            console.log(picture_data);
+        };
         self.setController = function (canvas_ctrl){
             my.canvas_ctrl = canvas_ctrl;
         }
         return self;
     };
     editControls = function (view, canvasctrl, tour_model) {
+        var my = {};
         view.setController(this);
         if (canvasctrl === undefined) {
             canvasctrl = drawCanvas();
@@ -77,7 +82,14 @@
             view.update(tour_model.getRooms());
         };
         self.setActivePicture = function (picture) {
-            
+            if (my.hasOwnProperty('picture_data')){
+                my.picture_data.shapes = canvasctrl.getShapes();
+            }
+            tour_model.updatePicture(my.picture_data);
+            my.picture_data = tour_model.getPicture(picture.id);
+            my.picture_room = tour_model.getActiveRoomID();
+            view.setActivePicture(my.picture_data);
+            canvasctrl.setPictureData(my.picture_data);
         };
         self.setActiveRoom = function (room) {
             var object_id = room.attr("object_id");
@@ -401,6 +413,15 @@
         self.setMode = function (mode) {
             my.mode = mode;
         };
+        self.setPictureData = function (data) {
+            console.log("Canvas control received the following via setPictureData:");
+            console.log(data);
+            my.shapes = data.shapes;
+            self.drawRects();
+        };
+        self.getShapes = function () {
+            return my.shapes;
+        };
         return self;
     };
     setDrawPanel = function (edit_ctrl) {
@@ -463,9 +484,21 @@
                 name: "New Picture",
                 description: "New view of the room",
                 src: "",
-                shapes: {},
+                shapes: [],
                 id: picture_id
             };
+            return my.rooms[room_id].pictures[picture_id];
+        };
+        new_model.getActiveRoomID = function () {
+            return my.active_room_id;
+        };
+        new_model.getPicture = function (picture, room) {
+            if (room !== undefined && my.rooms.hasOwnProperty(room) && my.rooms[room].pictures.hasOwnProperty) {
+                return my.rooms[room].pictures[picture];
+            } else if (my.active_room_id !== null && my.rooms.hasOwnProperty(my.active_room_id) && my.rooms[my.active_room_id].pictures.hasOwnProperty(picture)) {
+                return my.rooms[my.active_room_id].pictures[picture];
+            }
+            return null;
         };
         new_model.getRooms = function () {
             return my.rooms;
@@ -476,6 +509,13 @@
         new_model.setActiveRoom = function (active_room_id) {
             my.active_room_id = active_room_id;
         };
+        new_model.updatePicture = function (picture, room) {
+            if (room !== undefined && my.rooms.hasOwnProperty(room) && my.rooms[room].pictures.hasOwnProperty) {
+                my.rooms[room].pictures[picture.id] = picture;
+            } else if (my.active_room_id !== null && my.rooms.hasOwnProperty(my.active_room_id) && my.rooms[my.active_room_id].pictures.hasOwnProperty(picture)) {
+                my.rooms[my.active_room_id].pictures[picture.id] = picture;
+            }
+        }
         return new_model;
     };
 
@@ -484,6 +524,7 @@
             model = tourModel(),
             view = adminView(),
             edit_ctrl = editControls(view, canvas_ctrl, model);
+        view.setController(edit_ctrl);
         setDrawPanel(edit_ctrl);
     });
 }());
