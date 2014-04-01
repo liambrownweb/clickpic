@@ -444,6 +444,7 @@
         $("#edit_mode").children("input").click(function (e) {
             edit_ctrl.setMode(e.currentTarget.value);
         });
+        $("input.manage_button").button();
     };
     tourModel = function () {
         var new_model = {},
