@@ -1,10 +1,10 @@
 (function () {
     'use strict';
-    var adminView, editControls, manageView, manageControls, drawCanvas, setDrawPanel, setManagePanel, tourModel;
+    var adminView, editControls, manageView, manageControls, projectsControls, projectsView, drawCanvas, setDrawPanel, setManagePanel, tourModel;
     adminView = function () {
         var my = {
-                rooms: {}
-            },
+            rooms: {},
+        },
             self = {
                 room_list: $("#edit_screen_list")
             };
@@ -57,9 +57,9 @@
             console.log("View controller received the following via setActiveRoomView:");
             console.log(room_view_data);
         };
-        self.setController = function (canvas_ctrl){
+        self.setController = function (canvas_ctrl) {
             my.canvas_ctrl = canvas_ctrl;
-        }
+        };
         return self;
     };
     editControls = function (view, canvasctrl, tour_model) {
@@ -82,7 +82,7 @@
             view.update(tour_model.getRooms());
         };
         self.setActiveRoomView = function (room_view) {
-            if (my.hasOwnProperty('room_view_data')){
+            if (my.hasOwnProperty('room_view_data') && my.room_view_data !== null) {
                 my.room_view_data.shapes = canvasctrl.getShapes();
             }
             tour_model.updateRoomView(my.room_view_data);
@@ -110,10 +110,71 @@
         if (tour_model === undefined) {
             tour_model = tourModel();
         }
+        self.refreshList = function () {
+            // Refresh the view with new data
+        };
         self.selectImage = function (id) {
             var room_view = tour_model.getRoomView(id);
             view.selectImage(id);
-            view.setActiveImage(room_view)
+            view.setActiveImage(room_view);
+        };
+        self.uploadImage = function () {
+            var fileman = $("#manage_file");
+            fileman.click();
+            fileman.change(function (data) {
+                var reader = false,
+                    formdata = false,
+                    i,
+                    len = this.files.length,
+                    img,
+                    file;
+                if (window.FormData) {
+                    formdata = new FormData();
+                }
+                if (window.FileReader) {
+                    reader = new FileReader();
+                    reader.onloadend = function (e) {
+                        showUploadedItem(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+                //document.getElementById("response").innerHTML = "Uploading . . .";
+                console.log("Uploading...");
+                for (i = 0; i < len; i += 1) {
+                    file = this.files[i];
+
+                    if (!!file.type.match(/image.*/)) {
+                        if (window.FileReader) {
+                            reader = new FileReader();
+                            reader.onloadend = function (e) {
+                                console.log("loaded");
+                                console.log(e);
+                                //showUploadedItem(e.target.result);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                        if (formdata) {
+                            formdata.append("images_" + [i], file);
+                        }
+                    }
+                }
+                if (formdata) {
+                    formdata.append("action", "upload");
+                    $.ajax({
+                        url: "images/manage",
+                        type: "POST",
+                        data: formdata,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) {
+                            document.getElementById("response").innerHTML = res;
+                        },
+                        error: function (res) {
+                            console.log(res);
+                        }
+                    });
+                }
+            });
         };
         return self;
     };
@@ -121,16 +182,60 @@
         var my = {
             canvas_ctrl: null
         },
-            self = {};
+        self = {};
         self.selectImage = function (id) {
             console.log(id);
         };
         self.setActiveImage = function (image_data) {
             console.log(image_data);
         };
-        self.setController = function (canvas_ctrl){
+        self.setController = function (canvas_ctrl) {
             my.canvas_ctrl = canvas_ctrl;
-        }
+        };
+        return self;
+    };
+    projectsControls =  function () {
+        var my = {
+                index: null
+            },
+            self = {};
+        self.openProject = function (id) {
+            //Code for retrieving a project from DB
+        };
+        self.saveProject = function (project) {
+            //Code for saving project.
+            //If 'project' param is not null, save or update it.
+            //Otherwise, if there's a project open, save that one.
+            //Otherwise return null or throw error or something.
+        };
+        self.closeProject = function () {};
+        self.deleteProject = function (id) {
+            //Delete the project identified by 'id' param.
+        };
+        self.buildProjectsIndex = function () {
+            //build list of all projects with main images, create dates, etc.
+            //assign it to a 'my' field.
+        };
+        self.getProjectsIndex = function () {
+            if (my.index === null){
+                self.buildProjectsIndex();
+            }
+            //Get brief list of all projects, main images, create dates, etc.
+            return my.index;
+        };
+    };
+    projectsView = function () {
+        var my = {},
+            self = {};
+        self.selectProject = function (id) {
+            console.log(id);
+        };
+        self.openProject = function (id) {
+            console.log(id);
+        };
+        self.setController = function (projects_ctrl) {
+            my.project_ctrl = projects_ctrl;
+        };
         return self;
     };
     drawCanvas = function () {
@@ -404,7 +509,7 @@
             for (i = my.shapes.length - 1; i >= 0; i -= 1) {
                 current_shape = my.shapes[i];
                 if (x >= current_shape.x1 && x <= current_shape.x1 + current_shape.x2
-                        && y >= current_shape.y1 && y <= current_shape.y1 + current_shape.y2) {
+                    && y >= current_shape.y1 && y <= current_shape.y1 + current_shape.y2) {
                     if (pop_it) {
                         my.shapes.splice(i, 1);
                     }
@@ -483,10 +588,24 @@
             manage_ctrl = manageControls();
         }
         $("input.manage_button").button();
-        $(".thumbs_img_container").click(function (element){
+        $("#manage_upload").click(function () {
+            manage_ctrl.uploadImage();
+        });
+        $("#manage_refresh").click(function () {
+            manage_ctrl.refreshList();
+        });
+        /**
+         * @TODO Add functionality to populate the filter menu with values taken from the controller?
+         * At least get the code DRY somehow.
+         */
+        $("#manage_filter").change(function () {
+            var value = $(this).value;
+            manage_ctrl.filterImages(value);
+        });
+        $(".thumbs_img_container").click(function (element) {
             var id = $(this).attr('id');
             manage_ctrl.selectImage(id);
-        });        
+        });
     };
     tourModel = function () {
         var new_model = {},

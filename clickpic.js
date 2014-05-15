@@ -15,8 +15,9 @@ var express = require('express'),
     data = require('./routes/data'),
     images = require('./routes/images'),
     user = require('./routes/user'),
-    viewer =  require('./routes/viewer'),
-    admin = require('./routes/admin');
+    viewer = require('./routes/viewer'),
+    admin = require('./routes/admin'),
+    model = require('./model/model');
 
 language_control.setLanguage(config.locale.language);
 
@@ -26,6 +27,20 @@ var main = function () {
         app.set('port', process.env.PORT || 3000);
         app.set('views', path.join(__dirname, 'views'));
         app.set('view engine', 'ejs');
+        app.use(express.bodyParser());
+        app.use(express.multipart());
+        app.use(function (req, res, next) {
+            if (req.is('text/*')) {
+                req.text = '';
+                req.setEncoding('utf8');
+                req.on('data', function (chunk) {
+                    req.text += chunk;
+                });
+                req.on('end', next);
+            } else {
+                next();
+            }
+        });
         app.use(express.favicon());
         app.use(express.logger('dev'));
         app.use(express.json());
@@ -40,7 +55,7 @@ var main = function () {
 
     // development only
     if ('development' === app.get('env')) {
-      app.use(express.errorHandler());
+        app.use(express.errorHandler());
     }
 
     httpServer.listen(app.get('port'), function () {
@@ -50,12 +65,12 @@ var main = function () {
     app.get('/', routes.index);
     app.get('/users', user.list);
     app.get('/images/get', images.main);
-    app.get('/images/manage', images.manage);
+    app.post('/images/manage', images.manage);
     app.get('/data/get', data.main);
     app.get('/data/manage', data.manage);
     app.get('/viewer', viewer.main);
     app.get('/admin', admin.main);
-}
+};
 
 main();
 

@@ -52,7 +52,6 @@ img.screen_item_thumb {
 .thumbs_img_container {
   border: 1px solid #999;
   border-radius: 5px;
-  display: inline-block;
   margin: 10px 5px 0 5px;
   vertical-align: top;
   min-height: 155px;
